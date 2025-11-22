@@ -218,7 +218,7 @@ function callGeminiAPI($prompt) {
             'temperature' => 0.7,
             'topK' => 40,
             'topP' => 0.95,
-            'maxOutputTokens' => 2048,
+            'maxOutputTokens' => 8192, // Increased for full 10-slide carousel
             'responseMimeType' => 'application/json' // Force clean JSON output (Gemini 2.5+)
         ],
         'safetySettings' => [
