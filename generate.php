@@ -307,11 +307,19 @@ function callGeminiAPI($prompt) {
 
     if (json_last_error() !== JSON_ERROR_NONE) {
         // Log the problematic response for debugging
+        error_log('=== CAROUSEL JSON PARSE ERROR ===');
         error_log('Gemini API Response (raw): ' . substr($result['candidates'][0]['content']['parts'][0]['text'], 0, 500));
         error_log('Cleaned text: ' . substr($generatedText, 0, 500));
+        error_log('Text length: ' . strlen($generatedText));
+        error_log('First char: ' . ord(substr($generatedText, 0, 1)));
+        error_log('Last char: ' . ord(substr($generatedText, -1)));
         error_log('JSON Error: ' . json_last_error_msg());
 
-        throw new Exception('Failed to parse AI response as JSON: ' . json_last_error_msg() . '. Please try again or check the API response.');
+        // Save full response to file for debugging
+        file_put_contents(__DIR__ . '/debug-last-response.txt', $generatedText);
+        error_log('Full response saved to debug-last-response.txt');
+
+        throw new Exception('Failed to parse AI response as JSON: ' . json_last_error_msg() . '. Check debug-last-response.txt for full response.');
     }
 
     return $carouselData;
