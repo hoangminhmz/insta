@@ -218,9 +218,8 @@ function callGeminiAPI($prompt) {
             'temperature' => 0.7,
             'topK' => 40,
             'topP' => 0.95,
-            'maxOutputTokens' => 2048
-            // Note: responseMimeType may not be supported in all models
-            // Removed to ensure compatibility
+            'maxOutputTokens' => 2048,
+            'responseMimeType' => 'application/json' // Force clean JSON output (Gemini 2.5+)
         ],
         'safetySettings' => [
             [
