@@ -7,10 +7,10 @@ const AppState = {
     currentStep: 1,
     carouselData: null,
     designSettings: {
-        primaryColor: '#000000',
-        accentColor: '#FF6B9D',
+        primaryColor: '#0F2440',        // Navy
+        accentColor: '#2AB0A2',         // Teal
         backgroundColor: '#FFFFFF',
-        headingFont: 'Poppins',
+        headingFont: 'Inter',
         bodyFont: 'Inter',
         padding: 80,
         textSize: 0,
@@ -25,6 +25,7 @@ const elements = {
     // Step 1
     contentForm: document.getElementById('contentForm'),
     blogContent: document.getElementById('blogContent'),
+    blogURL: document.getElementById('blogURL'),
     charCount: document.getElementById('charCount'),
     nicheSelector: document.getElementById('nicheSelector'),
     toneSelector: document.getElementById('toneSelector'),
@@ -60,6 +61,7 @@ const elements = {
     // Step 4
     loadingSpinner: document.getElementById('loadingSpinner'),
     downloadSection: document.getElementById('downloadSection'),
+    successMessage: document.getElementById('successMessage'),
     progressBar: document.getElementById('progressBar'),
     downloadZipBtn: document.getElementById('downloadZipBtn'),
     generateAgain: document.getElementById('generateAgain'),
@@ -131,13 +133,14 @@ async function handleContentSubmit(e) {
     e.preventDefault();
 
     const content = elements.blogContent.value.trim();
+    const url = elements.blogURL ? elements.blogURL.value.trim() : '';
     const niche = elements.nicheSelector.value;
     const tone = elements.toneSelector.value;
     const username = elements.username.value.trim() || 'yourusername';
 
-    // Validation
-    if (!content || content.length < 100) {
-        showAlert('Please enter at least 100 characters of content.', 'warning');
+    // Validation - either URL or content required
+    if (!url && (!content || content.length < 100)) {
+        showAlert('Please enter at least 100 characters of content OR provide a blog URL.', 'warning');
         return;
     }
 
@@ -154,18 +157,27 @@ async function handleContentSubmit(e) {
     elements.analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing...';
 
     try {
+        // Prepare request payload
+        const payload = {
+            niche,
+            tone,
+            username
+        };
+
+        // Add either URL or content
+        if (url) {
+            payload.url = url;
+        } else {
+            payload.content = content;
+        }
+
         // Call API
         const response = await fetch('generate.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                content,
-                niche,
-                tone,
-                username
-            })
+            body: JSON.stringify(payload)
         });
 
         const result = await response.json();
@@ -176,6 +188,12 @@ async function handleContentSubmit(e) {
 
         // Store carousel data
         AppState.carouselData = result.data;
+
+        // Update total slides count
+        const totalSlides = Object.keys(result.data).length;
+        if (typeof CanvasGenerator !== 'undefined') {
+            CanvasGenerator.setTotalSlides(totalSlides);
+        }
 
         // Display slides for review
         displaySlidesPreview();
@@ -403,10 +421,10 @@ function handleTextSizeChange(e) {
  */
 function resetDesignSettings() {
     AppState.designSettings = {
-        primaryColor: '#000000',
-        accentColor: '#FF6B9D',
+        primaryColor: '#0F2440',        // Navy
+        accentColor: '#2AB0A2',         // Teal
         backgroundColor: '#FFFFFF',
-        headingFont: 'Poppins',
+        headingFont: 'Inter',
         bodyFont: 'Inter',
         padding: 80,
         textSize: 0,
@@ -414,10 +432,10 @@ function resetDesignSettings() {
     };
 
     // Update UI
-    elements.primaryColor.value = '#000000';
-    elements.accentColor.value = '#FF6B9D';
+    elements.primaryColor.value = '#0F2440';
+    elements.accentColor.value = '#2AB0A2';
     elements.backgroundColor.value = '#FFFFFF';
-    elements.headingFont.value = 'Poppins';
+    elements.headingFont.value = 'Inter';
     elements.bodyFont.value = 'Inter';
     elements.paddingSlider.value = 80;
     elements.paddingValue.textContent = '80';
@@ -508,6 +526,11 @@ async function handleGenerateImages() {
         // Create and download ZIP
         await createAndDownloadZip(images);
 
+        // Update success message with actual slide count
+        if (elements.successMessage) {
+            elements.successMessage.textContent = `${images.length} Slides Generated Successfully!`;
+        }
+
         // Show download section
         elements.loadingSpinner.classList.add('d-none');
         elements.downloadSection.classList.remove('d-none');
@@ -522,20 +545,47 @@ async function handleGenerateImages() {
  * Create and download ZIP file
  */
 async function createAndDownloadZip(images) {
-    // Note: This requires JSZip library or server-side ZIP creation
-    // For now, we'll provide individual downloads
-    // In production, implement proper ZIP creation
-
-    console.log('Generated images:', images);
+    // Check if JSZip is available
+    if (typeof JSZip === 'undefined') {
+        console.warn('JSZip not loaded, downloading images individually');
+        AppState.generatedImages = images;
+        elements.downloadZipBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            downloadAllImages();
+        }, { once: true });
+        return;
+    }
 
     // Store images for download
     AppState.generatedImages = images;
 
-    // Update download button
-    elements.downloadZipBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        downloadAllImages();
+    // Create ZIP file
+    const zip = new JSZip();
+    const folder = zip.folder('carousel-slides');
+
+    // Add all images to ZIP
+    images.forEach((image) => {
+        // Convert data URL to blob
+        const base64Data = image.data.split(',')[1];
+        folder.file(image.name, base64Data, { base64: true });
     });
+
+    // Update download button to download ZIP
+    elements.downloadZipBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'instagram-carousel-' + Date.now() + '.zip';
+            link.click();
+            showAlert('ZIP file downloaded successfully!', 'success');
+        } catch (error) {
+            console.error('ZIP creation error:', error);
+            showAlert('Failed to create ZIP. Downloading images individually...', 'warning');
+            downloadAllImages();
+        }
+    }, { once: true });
 }
 
 /**

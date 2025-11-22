@@ -8,6 +8,7 @@ const CanvasGenerator = {
     appState: null,
     canvasWidth: 1080,
     canvasHeight: 1350,
+    totalSlides: 10, // Will be updated dynamically
 
     /**
      * Initialize canvas
@@ -376,21 +377,61 @@ const CanvasGenerator = {
     },
 
     /**
-     * Highlight keywords in text (simplified version)
+     * Highlight keywords in text with background rectangles
      */
     highlightKeywords(textObj, keywords) {
-        if (!keywords || !Array.isArray(keywords)) return;
+        if (!keywords || !Array.isArray(keywords) || keywords.length === 0) return;
 
-        // Note: Advanced keyword highlighting would require text parsing
-        // For now, we'll add a simple visual cue with a background rectangle
-        // Full implementation would involve splitting text and styling individual words
+        const text = textObj.text.toLowerCase();
+        const textLeft = textObj.left;
+        const textTop = textObj.top;
+        const fontSize = textObj.fontSize;
+        const lineHeight = textObj.lineHeight || 1.16;
+
+        keywords.forEach(keyword => {
+            if (!keyword || keyword.trim() === '') return;
+
+            const searchTerm = keyword.toLowerCase();
+            let startIndex = 0;
+
+            // Find all occurrences of the keyword
+            while ((startIndex = text.indexOf(searchTerm, startIndex)) !== -1) {
+                // Calculate approximate position
+                const beforeText = text.substring(0, startIndex);
+                const lines = beforeText.split('\n');
+                const lineNumber = lines.length - 1;
+                const charInLine = lines[lines.length - 1].length;
+
+                // Approximate positioning (not pixel-perfect but good enough)
+                const charWidth = fontSize * 0.6; // Approximate character width
+                const xPos = textLeft + (charInLine * charWidth);
+                const yPos = textTop + (lineNumber * fontSize * lineHeight);
+
+                // Create highlight rectangle
+                const highlight = new fabric.Rect({
+                    left: xPos - 4,
+                    top: yPos - 2,
+                    width: keyword.length * charWidth + 8,
+                    height: fontSize + 4,
+                    fill: 'rgba(42, 176, 162, 0.2)', // Teal with transparency
+                    rx: 4,
+                    ry: 4,
+                    selectable: false
+                });
+
+                // Add behind the text
+                this.canvas.insertAt(highlight, this.canvas.getObjects().indexOf(textObj));
+
+                startIndex += searchTerm.length;
+            }
+        });
     },
 
     /**
      * Add slide number indicator
      */
     addSlideNumber(slideNumber) {
-        const slideNum = new fabric.Text(`${slideNumber}/10`, {
+        const slideNum = new fabric.Text(`${slideNumber}/${this.totalSlides}`, {
             left: this.canvasWidth - 80,
             top: this.canvasHeight - 80,
             fontSize: 24,
@@ -400,6 +441,13 @@ const CanvasGenerator = {
             originY: 'center'
         });
         this.canvas.add(slideNum);
+    },
+
+    /**
+     * Set total slides count
+     */
+    setTotalSlides(count) {
+        this.totalSlides = count;
     },
 
     /**

@@ -37,15 +37,36 @@ if (!checkRateLimit()) {
 $input = file_get_contents('php://input');
 $data = json_decode($input, true);
 
+// Check if URL scraping is requested
+$content = '';
+if (!empty($data['url'])) {
+    // Scrape content from URL
+    try {
+        $content = scrapeContentFromURL($data['url']);
+        if (empty($content)) {
+            throw new Exception('Failed to extract content from URL');
+        }
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'URL Scraping Failed',
+            'message' => $e->getMessage()
+        ]);
+        exit();
+    }
+} else if (isset($data['content'])) {
+    $content = $data['content'];
+}
+
 // Validate input
-if (!isset($data['content']) || empty($data['content'])) {
+if (empty($content) || strlen($content) < 100) {
     http_response_code(400);
-    echo json_encode(['error' => 'Content is required']);
+    echo json_encode(['error' => 'Content is required (minimum 100 characters)']);
     exit();
 }
 
 // Sanitize and validate inputs
-$content = substr(sanitizeInput($data['content']), 0, MAX_CONTENT_LENGTH);
+$content = substr(sanitizeInput($content), 0, MAX_CONTENT_LENGTH);
 $niche = sanitizeInput($data['niche'] ?? 'General');
 $tone = sanitizeInput($data['tone'] ?? 'Educational');
 $username = sanitizeInput($data['username'] ?? 'yourusername');
@@ -79,7 +100,9 @@ try {
  */
 function buildCarouselPrompt($content, $niche, $tone, $username) {
     return <<<PROMPT
-You are an expert Instagram content creator specializing in carousel posts. Analyze the following blog content and structure it into a highly engaging 10-slide Instagram carousel.
+You are an expert Instagram content creator specializing in carousel posts. Analyze the following blog content and structure it into a highly engaging Instagram carousel with 10-20 slides.
+
+**IMPORTANT:** Based on the content depth and complexity, decide the optimal number of slides (minimum 10, maximum 20). More complex topics should have more slides, simpler topics can use 10-12 slides.
 
 **BLOG CONTENT:**
 $content
@@ -90,7 +113,7 @@ $content
 
 **OUTPUT REQUIREMENTS:**
 
-You MUST respond with ONLY valid JSON (no markdown, no code blocks, no additional text). Use this EXACT structure:
+You MUST respond with ONLY valid JSON (no markdown, no code blocks, no additional text). The structure should be flexible based on content:
 
 {
   "slide1": {
@@ -154,6 +177,13 @@ You MUST respond with ONLY valid JSON (no markdown, no code blocks, no additiona
     "keywords": ["bonus", "tip"]
   },
   "slide10": {
+    "type": "content",
+    "heading": "Additional point (if needed)",
+    "body": "Continue with more insights...",
+    "keywords": ["key", "terms"]
+  },
+  ... (continue up to slide 19 if content requires it) ...
+  "slide[N]": {
     "type": "cta",
     "text": "Share this with someone who needs to see it!",
     "username": "@$username",
@@ -161,13 +191,15 @@ You MUST respond with ONLY valid JSON (no markdown, no code blocks, no additiona
   }
 }
 
+**IMPORTANT:** The LAST slide must ALWAYS be type "cta" for call-to-action. Number your slides sequentially: slide1, slide2, slide3, ... slide[N] where N is 10-20.
+
 **CONTENT RULES:**
-1. Slide 1: Hook that creates curiosity or addresses pain point
-2. Slides 2-3: Explain the problem and why it matters
-3. Slides 4-6: Deep dive into causes, science, mechanisms
-4. Slides 7-8: Actionable solutions and practical steps
-5. Slide 9: Bonus tip, emergency hack, or key takeaway
-6. Slide 10: Strong CTA with username branding
+1. Slide 1: Hook that creates curiosity or addresses pain point (always required)
+2. Slides 2-4: Explain the problem and why it matters
+3. Middle slides: Deep dive into causes, science, mechanisms, solutions
+4. Include 2-3 "list" type slides for actionable steps
+5. Include 1 "bonus" type slide for pro tips
+6. Last slide: Strong CTA with username branding (always required)
 
 **STYLE GUIDELINES:**
 - Keep text concise and scannable
@@ -323,6 +355,99 @@ function callGeminiAPI($prompt) {
     }
 
     return $carouselData;
+}
+
+/**
+ * Scrape content from URL
+ */
+function scrapeContentFromURL($url) {
+    // Validate URL
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        throw new Exception('Invalid URL format');
+    }
+
+    // Initialize cURL
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+
+    // Execute request
+    $html = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    // Check for errors
+    if ($error) {
+        throw new Exception('Failed to fetch URL: ' . $error);
+    }
+
+    if ($httpCode !== 200) {
+        throw new Exception('URL returned HTTP ' . $httpCode);
+    }
+
+    if (empty($html)) {
+        throw new Exception('No content retrieved from URL');
+    }
+
+    // Parse HTML and extract text content
+    $content = extractTextFromHTML($html);
+
+    if (strlen($content) < 100) {
+        throw new Exception('Insufficient content extracted from URL (minimum 100 characters)');
+    }
+
+    return $content;
+}
+
+/**
+ * Extract text content from HTML
+ */
+function extractTextFromHTML($html) {
+    // Remove script and style tags
+    $html = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $html);
+    $html = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $html);
+
+    // Try to extract main content area (common blog selectors)
+    $contentSelectors = [
+        '/<article[^>]*>(.*?)<\/article>/is',
+        '/<main[^>]*>(.*?)<\/main>/is',
+        '/<div[^>]*class="[^"]*(?:post-content|entry-content|article-content|content)[^"]*"[^>]*>(.*?)<\/div>/is',
+        '/<div[^>]*id="[^"]*(?:content|main)[^"]*"[^>]*>(.*?)<\/div>/is'
+    ];
+
+    $extracted = '';
+    foreach ($contentSelectors as $pattern) {
+        if (preg_match($pattern, $html, $matches)) {
+            $extracted = $matches[1];
+            break;
+        }
+    }
+
+    // If no specific content area found, use full body
+    if (empty($extracted)) {
+        if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches)) {
+            $extracted = $matches[1];
+        } else {
+            $extracted = $html;
+        }
+    }
+
+    // Remove remaining HTML tags
+    $text = strip_tags($extracted);
+
+    // Clean up whitespace
+    $text = preg_replace('/\s+/', ' ', $text);
+    $text = trim($text);
+
+    // Decode HTML entities
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    return $text;
 }
 
 // Auto cleanup old files

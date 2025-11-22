@@ -34,7 +34,7 @@ require_once('config.php');
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <h1 class="mb-0"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Instagram Carousel Generator</h1>
-                    <p class="mb-0 mt-1 opacity-75">Transform your blog content into engaging 10-slide carousels</p>
+                    <p class="mb-0 mt-1 opacity-75">Transform your blog content into engaging 10-20 slide carousels with AI</p>
                 </div>
                 <div class="col-md-4 text-end">
                     <span class="badge bg-light text-dark">AI-Powered</span>
@@ -84,14 +84,32 @@ require_once('config.php');
                         <div class="card-body">
                             <form id="contentForm">
                                 <div class="mb-3">
+                                    <label for="blogURL" class="form-label">
+                                        <i class="bi bi-link-45deg me-1"></i>Or Provide Blog URL
+                                    </label>
+                                    <input
+                                        type="url"
+                                        class="form-control"
+                                        id="blogURL"
+                                        placeholder="https://example.com/blog-post"
+                                    >
+                                    <div class="form-text">
+                                        Automatically extract content from any blog URL
+                                    </div>
+                                </div>
+
+                                <div class="text-center mb-3">
+                                    <span class="badge bg-secondary">OR</span>
+                                </div>
+
+                                <div class="mb-3">
                                     <label for="blogContent" class="form-label">Paste Your Blog Content</label>
                                     <textarea
                                         class="form-control"
                                         id="blogContent"
-                                        rows="12"
+                                        rows="10"
                                         placeholder="Paste your blog article here (1000-3000 words recommended)..."
                                         maxlength="10000"
-                                        required
                                     ></textarea>
                                     <div class="form-text">
                                         <span id="charCount">0</span> / 10,000 characters
@@ -361,7 +379,7 @@ require_once('config.php');
 
                             <div id="downloadSection" class="d-none">
                                 <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
-                                <h4 class="mt-3">10 Slides Generated Successfully!</h4>
+                                <h4 class="mt-3" id="successMessage">Slides Generated Successfully!</h4>
                                 <p class="text-muted">Your Instagram carousel images are ready to download</p>
 
                                 <div class="d-grid gap-2 col-md-6 mx-auto mt-4">
@@ -375,7 +393,7 @@ require_once('config.php');
 
                                 <div class="alert alert-info mt-4" role="alert">
                                     <i class="bi bi-info-circle me-2"></i>
-                                    <strong>Next Steps:</strong> Extract the ZIP file and upload all 10 images to Instagram as a carousel post. Remember to write an engaging caption!
+                                    <strong>Next Steps:</strong> Extract the ZIP file and upload all images to Instagram as a carousel post. Remember to write an engaging caption!
                                 </div>
                             </div>
                         </div>
@@ -387,15 +405,18 @@ require_once('config.php');
     </div>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-4 mt-5">
+    <footer class="text-center py-4 mt-5">
         <div class="container">
-            <p class="mb-0">Instagram Carousel Generator &copy; 2024 | Powered by Google Gemini AI</p>
-            <small class="text-muted">Transform your content into engaging visual stories</small>
+            <p class="mb-0">Instagram Carousel Generator &copy; 2025 | Powered by Google Gemini 2.5 Flash</p>
+            <small class="text-secondary">Transform your content into engaging visual stories</small>
         </div>
     </footer>
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JSZip for ZIP file creation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <!-- Custom JavaScript -->
     <script src="assets/js/app.js"></script>
