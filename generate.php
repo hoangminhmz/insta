@@ -181,7 +181,13 @@ You MUST respond with ONLY valid JSON (no markdown, no code blocks, no additiona
 
 **TONE:** Use a $tone tone that resonates with $niche audience.
 
-Remember: Output ONLY the JSON object, nothing else. No explanations, no markdown formatting.
+CRITICAL INSTRUCTIONS:
+- Output ONLY the JSON object
+- NO markdown code blocks (no ```)
+- NO explanations before or after the JSON
+- NO additional text
+- Start directly with { and end with }
+- Ensure valid JSON syntax
 PROMPT;
 }
 
@@ -213,6 +219,7 @@ function callGeminiAPI($prompt) {
             'topK' => 40,
             'topP' => 0.95,
             'maxOutputTokens' => 2048,
+            'responseMimeType' => 'application/json' // Force JSON output
         ],
         'safetySettings' => [
             [
@@ -262,16 +269,31 @@ function callGeminiAPI($prompt) {
     // Extract the JSON from the response
     $generatedText = $result['candidates'][0]['content']['parts'][0]['text'];
 
-    // Clean up the response (remove markdown code blocks if present)
-    $generatedText = preg_replace('/```json\s*/', '', $generatedText);
-    $generatedText = preg_replace('/```\s*/', '', $generatedText);
+    // Clean up the response - remove all markdown code blocks
+    // Handle various markdown formats: ```json, ```JSON, ``` json, etc.
+    $generatedText = preg_replace('/```[a-zA-Z]*\s*/s', '', $generatedText);
+    $generatedText = preg_replace('/```\s*$/s', '', $generatedText);
     $generatedText = trim($generatedText);
+
+    // Try to extract JSON if there's extra text
+    // Find first { and last } to extract pure JSON
+    $firstBrace = strpos($generatedText, '{');
+    $lastBrace = strrpos($generatedText, '}');
+
+    if ($firstBrace !== false && $lastBrace !== false && $lastBrace > $firstBrace) {
+        $generatedText = substr($generatedText, $firstBrace, $lastBrace - $firstBrace + 1);
+    }
 
     // Parse the JSON
     $carouselData = json_decode($generatedText, true);
 
     if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception('Failed to parse AI response as JSON: ' . json_last_error_msg());
+        // Log the problematic response for debugging
+        error_log('Gemini API Response (raw): ' . substr($result['candidates'][0]['content']['parts'][0]['text'], 0, 500));
+        error_log('Cleaned text: ' . substr($generatedText, 0, 500));
+        error_log('JSON Error: ' . json_last_error_msg());
+
+        throw new Exception('Failed to parse AI response as JSON: ' . json_last_error_msg() . '. Please try again or check the API response.');
     }
 
     return $carouselData;
