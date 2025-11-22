@@ -12,7 +12,7 @@ ini_set('display_errors', 1);
 
 // API Configuration
 define('GEMINI_API_KEY', 'YOUR_GEMINI_API_KEY_HERE');
-define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent');
+define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent');
 
 // Application Settings
 define('MAX_CONTENT_LENGTH', 10000); // Max characters for input
