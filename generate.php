@@ -218,8 +218,9 @@ function callGeminiAPI($prompt) {
             'temperature' => 0.7,
             'topK' => 40,
             'topP' => 0.95,
-            'maxOutputTokens' => 2048,
-            'responseMimeType' => 'application/json' // Force JSON output
+            'maxOutputTokens' => 2048
+            // Note: responseMimeType may not be supported in all models
+            // Removed to ensure compatibility
         ],
         'safetySettings' => [
             [
@@ -256,14 +257,32 @@ function callGeminiAPI($prompt) {
 
     // Check HTTP response code
     if ($httpCode !== 200) {
-        throw new Exception('API returned HTTP ' . $httpCode . ': ' . $response);
+        // Log the full error response
+        error_log('Gemini API Error - HTTP ' . $httpCode);
+        error_log('Response: ' . substr($response, 0, 1000));
+        throw new Exception('API returned HTTP ' . $httpCode . ': ' . substr($response, 0, 200));
     }
 
     // Parse response
     $result = json_decode($response, true);
 
+    // Check if response is valid JSON
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log('Failed to decode API response as JSON: ' . json_last_error_msg());
+        error_log('Raw response: ' . substr($response, 0, 1000));
+        throw new Exception('Invalid JSON response from API. Response starts with: ' . substr($response, 0, 100));
+    }
+
+    // Check if response has expected structure
     if (!isset($result['candidates'][0]['content']['parts'][0]['text'])) {
-        throw new Exception('Unexpected API response format');
+        // Log the actual structure received
+        error_log('Unexpected API response structure');
+        error_log('Response keys: ' . json_encode(array_keys($result)));
+        if (isset($result['error'])) {
+            error_log('API Error: ' . json_encode($result['error']));
+            throw new Exception('API Error: ' . ($result['error']['message'] ?? 'Unknown error'));
+        }
+        throw new Exception('Unexpected API response format. Please check API key and model availability.');
     }
 
     // Extract the JSON from the response

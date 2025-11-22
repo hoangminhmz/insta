@@ -12,6 +12,11 @@ ini_set('display_errors', 1);
 
 // API Configuration
 define('GEMINI_API_KEY', 'YOUR_GEMINI_API_KEY_HERE');
+
+// Gemini Model Options (uncomment the one you want to use):
+// Latest stable: gemini-2.5-flash (try this first)
+// Fallback: gemini-2.0-flash-exp (experimental but stable)
+// Alternative: gemini-2.0-flash (older but reliable)
 define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent');
 
 // Application Settings
