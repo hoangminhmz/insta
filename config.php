@@ -21,8 +21,7 @@ define('SESSION_TIMEOUT', 3600); // 1 hour
 
 // File Paths
 define('BASE_PATH', __DIR__);
-define('PUBLIC_PATH', BASE_PATH . '/public_html/carousel-generator');
-define('OUTPUT_PATH', PUBLIC_PATH . '/output');
+define('OUTPUT_PATH', BASE_PATH . '/output');
 define('TEMP_FILE_LIFETIME', 3600); // 1 hour in seconds
 
 // Image Settings

@@ -34,13 +34,22 @@ A powerful web-based tool that transforms blog content into engaging 10-slide In
 
 ### Step 1: Upload Files
 
-Upload the entire project to your cPanel hosting:
+Upload the entire project to your web server:
 
 ```
-/home/user/
-  ├── config.php (above public_html)
-  └── public_html/
-      └── carousel-generator/
+/your-domain/
+  ├── config.php
+  ├── index.php
+  ├── generate.php
+  ├── export.php
+  ├── download.php
+  ├── cleanup.php
+  ├── .htaccess
+  ├── assets/
+  │   ├── css/
+  │   ├── js/
+  │   └── templates/
+  └── output/
 ```
 
 ### Step 2: Configure API Key
@@ -55,13 +64,15 @@ define('GEMINI_API_KEY', 'your-actual-api-key-here');
 
 ### Step 3: Set Permissions
 
-Set the correct permissions via cPanel File Manager:
+Set the correct permissions via FTP or File Manager:
 
 ```bash
 # Directories: 755
-public_html/carousel-generator/
-public_html/carousel-generator/assets/
-public_html/carousel-generator/output/
+/assets/
+/assets/css/
+/assets/js/
+/assets/templates/
+/output/
 
 # Files: 644
 *.php
@@ -69,7 +80,7 @@ public_html/carousel-generator/output/
 *.css
 
 # Output directory: 777 (for write access)
-public_html/carousel-generator/output/
+/output/
 ```
 
 ### Step 4: Set Up Cron Job (Optional)
@@ -77,7 +88,7 @@ public_html/carousel-generator/output/
 Add a cron job to automatically clean up old files:
 
 ```
-0 * * * * php /home/user/public_html/carousel-generator/cleanup.php
+0 * * * * php /path/to/your/project/cleanup.php
 ```
 
 This runs every hour and deletes files older than 1 hour.
@@ -86,7 +97,12 @@ This runs every hour and deletes files older than 1 hour.
 
 Navigate to:
 ```
-https://yourdomain.com/carousel-generator/
+https://yourdomain.com/
+```
+
+Or if in a subfolder:
+```
+https://yourdomain.com/your-folder/
 ```
 
 ## Usage
@@ -119,24 +135,23 @@ https://yourdomain.com/carousel-generator/
 ```
 /
 ├── config.php                          # API configuration
-└── public_html/carousel-generator/
-    ├── index.php                       # Main application
-    ├── generate.php                    # AI API handler
-    ├── export.php                      # Image export handler
-    ├── download.php                    # ZIP download handler
-    ├── cleanup.php                     # Cleanup script
-    ├── .htaccess                       # Apache configuration
-    ├── assets/
-    │   ├── css/
-    │   │   └── style.css               # Custom styles
-    │   ├── js/
-    │   │   ├── app.js                  # Main app logic
-    │   │   └── canvas-generator.js     # Canvas rendering
-    │   ├── fonts/                      # Custom fonts (optional)
-    │   └── templates/
-    │       ├── template1.json          # Design template 1
-    │       └── template2.json          # Design template 2
-    └── output/                         # Temporary file storage
+├── index.php                           # Main application
+├── generate.php                        # AI API handler
+├── export.php                          # Image export handler
+├── download.php                        # ZIP download handler
+├── cleanup.php                         # Cleanup script
+├── .htaccess                           # Apache configuration
+├── assets/
+│   ├── css/
+│   │   └── style.css                   # Custom styles
+│   ├── js/
+│   │   ├── app.js                      # Main app logic
+│   │   └── canvas-generator.js         # Canvas rendering
+│   ├── fonts/                          # Custom fonts (optional)
+│   └── templates/
+│       ├── template1.json              # Design template 1
+│       └── template2.json              # Design template 2
+└── output/                             # Temporary file storage
 ```
 
 ## Configuration Options

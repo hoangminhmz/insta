@@ -8,7 +8,7 @@
  * (Runs every hour)
  */
 
-require_once('../../config.php');
+require_once('config.php');
 
 // Log file for cleanup operations
 $logFile = OUTPUT_PATH . '/cleanup.log';

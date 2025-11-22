@@ -4,7 +4,7 @@
  * Serves ZIP files for download
  */
 
-require_once('../../config.php');
+require_once('config.php');
 
 // Get filename from query string
 $fileName = $_GET['file'] ?? '';
