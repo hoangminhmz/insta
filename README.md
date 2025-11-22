@@ -62,7 +62,7 @@ Upload the entire project to your web server:
 define('GEMINI_API_KEY', 'your-actual-api-key-here');
 ```
 
-**Note**: The app uses **Gemini 2.0 Flash Experimental** (`gemini-2.0-flash-exp`) model for faster and more accurate content generation.
+**Note**: The app uses **Gemini 2.5 Flash** (`gemini-2.5-flash`) model - the latest AI model for faster and more accurate content generation.
 
 ### Step 3: Set Permissions
 
@@ -163,7 +163,7 @@ https://yourdomain.com/your-folder/
 ```php
 // API Configuration
 define('GEMINI_API_KEY', 'your-key');
-define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent');
+define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent');
 define('MAX_CONTENT_LENGTH', 10000);        // Max input characters
 define('MAX_GENERATIONS_PER_SESSION', 10);  // Rate limit
 define('TEMP_FILE_LIFETIME', 3600);         // 1 hour in seconds
