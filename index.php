@@ -21,7 +21,7 @@ require_once('config.php');
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo time(); ?>">
 
     <!-- Fabric.js for Canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
@@ -419,8 +419,8 @@ require_once('config.php');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <!-- Custom JavaScript -->
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/canvas-generator.js"></script>
+    <script src="assets/js/app.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/canvas-generator.js?v=<?php echo time(); ?>"></script>
 
 </body>
 </html>
