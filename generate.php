@@ -397,8 +397,12 @@ function scrapeContentFromURL($url) {
     // Parse HTML and extract text content
     $content = extractTextFromHTML($html);
 
-    if (strlen($content) < 100) {
-        throw new Exception('Insufficient content extracted from URL (minimum 100 characters)');
+    // Log extraction results for debugging
+    error_log('URL Scraping: Extracted ' . strlen($content) . ' characters from ' . $url);
+
+    if (strlen($content) < 50) {
+        error_log('URL Scraping Failed: Only ' . strlen($content) . ' characters extracted. Preview: ' . substr($content, 0, 200));
+        throw new Exception('Insufficient content extracted from URL. Got ' . strlen($content) . ' characters (minimum 50 required). The website might use JavaScript to load content or block scraping.');
     }
 
     return $content;
@@ -411,16 +415,20 @@ function extractTextFromHTML($html) {
     // Remove script and style tags
     $html = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $html);
     $html = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $html);
+    $html = preg_replace('/<noscript\b[^>]*>(.*?)<\/noscript>/is', '', $html);
 
-    // Try to extract main content area (common blog selectors)
+    // Try multiple extraction strategies
+    $extracted = '';
+
+    // Strategy 1: Try specific content selectors (most accurate)
     $contentSelectors = [
         '/<article[^>]*>(.*?)<\/article>/is',
         '/<main[^>]*>(.*?)<\/main>/is',
-        '/<div[^>]*class="[^"]*(?:post-content|entry-content|article-content|content)[^"]*"[^>]*>(.*?)<\/div>/is',
-        '/<div[^>]*id="[^"]*(?:content|main)[^"]*"[^>]*>(.*?)<\/div>/is'
+        '/<div[^>]*class="[^"]*(?:post-content|entry-content|article-content|article-body|post-body|content-area)[^"]*"[^>]*>(.*?)<\/div>/is',
+        '/<div[^>]*id="[^"]*(?:content|main|article|post)[^"]*"[^>]*>(.*?)<\/div>/is',
+        '/<section[^>]*class="[^"]*(?:content|post|article)[^"]*"[^>]*>(.*?)<\/section>/is'
     ];
 
-    $extracted = '';
     foreach ($contentSelectors as $pattern) {
         if (preg_match($pattern, $html, $matches)) {
             $extracted = $matches[1];
@@ -428,13 +436,33 @@ function extractTextFromHTML($html) {
         }
     }
 
-    // If no specific content area found, use full body
-    if (empty($extracted)) {
-        if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches)) {
-            $extracted = $matches[1];
-        } else {
-            $extracted = $html;
+    // Strategy 2: If no specific content found, extract all paragraphs
+    if (empty($extracted) || strlen(strip_tags($extracted)) < 100) {
+        preg_match_all('/<p[^>]*>(.*?)<\/p>/is', $html, $paragraphs);
+        if (!empty($paragraphs[1])) {
+            $extracted = implode(' ', $paragraphs[1]);
         }
+    }
+
+    // Strategy 3: Try to get body content (less accurate)
+    if (empty($extracted) || strlen(strip_tags($extracted)) < 100) {
+        if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches)) {
+            $body = $matches[1];
+
+            // Remove common non-content elements
+            $body = preg_replace('/<header[^>]*>.*?<\/header>/is', '', $body);
+            $body = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $body);
+            $body = preg_replace('/<footer[^>]*>.*?<\/footer>/is', '', $body);
+            $body = preg_replace('/<aside[^>]*>.*?<\/aside>/is', '', $body);
+            $body = preg_replace('/<div[^>]*class="[^"]*(?:sidebar|menu|navigation|footer|header)[^"]*"[^>]*>.*?<\/div>/is', '', $body);
+
+            $extracted = $body;
+        }
+    }
+
+    // Strategy 4: Fallback to everything (last resort)
+    if (empty($extracted)) {
+        $extracted = $html;
     }
 
     // Remove remaining HTML tags
@@ -446,6 +474,11 @@ function extractTextFromHTML($html) {
 
     // Decode HTML entities
     $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    // Remove common noise patterns
+    $text = preg_replace('/\[.*?\]/', '', $text); // Remove [brackets]
+    $text = preg_replace('/Cookie Policy|Privacy Policy|Terms of Service|Subscribe|Newsletter/i', '', $text);
+    $text = trim($text);
 
     return $text;
 }
