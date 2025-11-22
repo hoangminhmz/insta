@@ -1,0 +1,15 @@
+{
+  "name": "Elegant Serif",
+  "description": "Sophisticated design with elegant typography",
+  "settings": {
+    "primaryColor": "#1a1a1a",
+    "accentColor": "#c9a961",
+    "backgroundColor": "#FFF8F0",
+    "headingFont": "Playfair Display",
+    "bodyFont": "Inter",
+    "padding": 90,
+    "textSize": 2,
+    "alignment": "center"
+  },
+  "preview": "template2-preview.png"
+}

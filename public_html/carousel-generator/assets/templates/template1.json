@@ -1,0 +1,15 @@
+{
+  "name": "Modern Professional",
+  "description": "Clean, minimal design with bold typography",
+  "settings": {
+    "primaryColor": "#000000",
+    "accentColor": "#FF6B9D",
+    "backgroundColor": "#FFFFFF",
+    "headingFont": "Poppins",
+    "bodyFont": "Inter",
+    "padding": 80,
+    "textSize": 0,
+    "alignment": "left"
+  },
+  "preview": "template1-preview.png"
+}
