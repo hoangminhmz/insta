@@ -6,9 +6,10 @@
  * Never commit API keys to version control
  */
 
-// Error reporting (disable in production)
+// Error reporting (disable display_errors to prevent HTML output in JSON responses)
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0); // Changed to 0 to prevent HTML errors breaking JSON
+ini_set('log_errors', 1); // Log errors instead of displaying them
 
 // API Configuration
 define('GEMINI_API_KEY', 'YOUR_GEMINI_API_KEY_HERE');
@@ -101,13 +102,21 @@ function setCorsHeaders() {
 
 // Auto-cleanup old files
 function cleanupOldFiles() {
-    $files = glob(OUTPUT_PATH . '/*');
+    if (!is_dir(OUTPUT_PATH)) {
+        return; // Skip if output directory doesn't exist
+    }
+
+    $files = @glob(OUTPUT_PATH . '/*'); // Suppress warnings
+    if ($files === false) {
+        return; // Skip if glob fails
+    }
+
     $now = time();
 
     foreach ($files as $file) {
         if (is_file($file)) {
-            if ($now - filemtime($file) >= TEMP_FILE_LIFETIME) {
-                unlink($file);
+            if ($now - @filemtime($file) >= TEMP_FILE_LIFETIME) {
+                @unlink($file); // Suppress warnings if file can't be deleted
             }
         }
     }
