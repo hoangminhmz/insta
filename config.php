@@ -14,10 +14,14 @@ ini_set('display_errors', 1);
 define('GEMINI_API_KEY', 'YOUR_GEMINI_API_KEY_HERE');
 
 // Gemini Model Options (uncomment the one you want to use):
-// Latest stable: gemini-2.5-flash (try this first)
-// Fallback: gemini-2.0-flash-exp (experimental but stable)
-// Alternative: gemini-2.0-flash (older but reliable)
-define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent');
+// RECOMMENDED: Gemini 2.0 Flash Experimental (tested and working)
+define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent');
+
+// Alternative 1: Gemini 1.5 Pro (if 2.0 doesn't work)
+// define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent');
+
+// Alternative 2: Gemini 1.5 Flash (stable)
+// define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent');
 
 // Application Settings
 define('MAX_CONTENT_LENGTH', 10000); // Max characters for input
