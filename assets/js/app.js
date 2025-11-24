@@ -118,12 +118,7 @@ function initializeEventListeners() {
  */
 function updateCharCount() {
     const count = elements.blogContent.value.length;
-    elements.charCount.textContent = count;
-
-    if (count > 10000) {
-        elements.blogContent.value = elements.blogContent.value.substring(0, 10000);
-        elements.charCount.textContent = '10000';
-    }
+    elements.charCount.textContent = count.toLocaleString();
 }
 
 /**

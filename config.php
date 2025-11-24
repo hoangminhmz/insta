@@ -28,7 +28,7 @@ define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/model
 // define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent');
 
 // Application Settings
-define('MAX_CONTENT_LENGTH', 10000); // Max characters for input
+define('MAX_CONTENT_LENGTH', 100000); // Max characters for input (100k)
 define('MAX_GENERATIONS_PER_SESSION', 10); // Rate limiting
 define('SESSION_TIMEOUT', 3600); // 1 hour
 

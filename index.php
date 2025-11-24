@@ -108,11 +108,10 @@ require_once('config.php');
                                         class="form-control"
                                         id="blogContent"
                                         rows="10"
-                                        placeholder="Paste your blog article here (1000-3000 words recommended)..."
-                                        maxlength="10000"
+                                        placeholder="Paste your blog article here (any length)..."
                                     ></textarea>
                                     <div class="form-text">
-                                        <span id="charCount">0</span> / 10,000 characters
+                                        <span id="charCount">0</span> characters
                                     </div>
                                 </div>
 
